@@ -4,7 +4,7 @@ import axios from "axios";
 import { io as socketIOClient } from "socket.io-client";
 import { getUser, removeUser } from "../lib/auth";
 
-const SOCKET_URL = "http://localhost:3000";
+const SOCKET_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Chat = () => {
   const { id: sessionId } = useParams();

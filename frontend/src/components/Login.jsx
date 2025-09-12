@@ -14,7 +14,10 @@ const Login = () => {
   const [loading, setLoading] = useState(true);
 
   const handleLogin = async () => {
-    const resp = await axios.post("http://localhost:3000/auth/login", data);
+    const resp = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/login`,
+      data
+    );
     if (resp.data.ok) {
       toast.success("Login successful");
       storeUser(resp.data.token);
@@ -114,7 +117,7 @@ const Login = () => {
           </Link>
         </div>
         <div
-          className="text-center text-gray-500 mt-4 cursor-pointer text-blue-500"
+          className="text-center  mt-4 cursor-pointer text-blue-500"
           onClick={handleLogout}
         >
           Logout

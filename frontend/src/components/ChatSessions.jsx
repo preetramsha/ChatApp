@@ -40,7 +40,7 @@ const ChatSessions = () => {
     const fetchSessions = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/site/chat-sessions",
+          `${import.meta.env.VITE_BACKEND_URL}/site/chat-sessions`,
           {
             params: { userId: user?.id },
           }
@@ -77,7 +77,9 @@ const ChatSessions = () => {
     setSearchResults([]);
     setTitle("");
     try {
-      const res = await axios.get("http://localhost:3000/site/recent-users");
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/site/recent-users`
+      );
       if (res?.data?.ok && Array.isArray(res.data.users)) {
         const filteredUsers = res.data.users.filter((u) => u.id !== user.id);
         setRecentUsers(filteredUsers);
@@ -110,11 +112,14 @@ const ChatSessions = () => {
     const t = setTimeout(async () => {
       try {
         setIsSearching(true);
-        const res = await axios.get("http://localhost:3000/site/search-users", {
-          params: { searchTerm },
-          timeout: 10000,
-          signal: controller.signal,
-        });
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/site/search-users`,
+          {
+            params: { searchTerm },
+            timeout: 10000,
+            signal: controller.signal,
+          }
+        );
         if (res?.data?.ok && Array.isArray(res.data.users)) {
           //remove master user from search results
           const filteredUsers = res.data.users.filter((u) => u.id !== user.id);
@@ -173,7 +178,7 @@ const ChatSessions = () => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        "http://localhost:3000/site/chat-sessions",
+        `${import.meta.env.VITE_BACKEND_URL}/site/chat-sessions`,
         {
           params: { userId: user?.id },
           timeout: 10000,
@@ -193,11 +198,14 @@ const ChatSessions = () => {
     if (isGroup && !title.trim()) return;
     setIsCreating(true);
     try {
-      const res = await axios.post("http://localhost:3000/site/chat-session", {
-        masterUserId: user?.id,
-        userIds: allUserIdsForCreate,
-        title: isGroup ? title.trim() : undefined,
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/site/chat-session`,
+        {
+          masterUserId: user?.id,
+          userIds: allUserIdsForCreate,
+          title: isGroup ? title.trim() : undefined,
+        }
+      );
       const sessionId = res?.data?.session?.id;
       if (sessionId) {
         closeModal();

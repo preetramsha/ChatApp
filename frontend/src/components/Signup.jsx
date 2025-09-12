@@ -12,7 +12,10 @@ const Signup = () => {
     password: "",
   });
   const handleSignup = async () => {
-    const resp = await axios.post("http://localhost:3000/auth/signup", data);
+    const resp = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/signup`,
+      data
+    );
     if (resp.data.ok) {
       toast.success("Signup successful");
       storeUser(resp.data.token);
