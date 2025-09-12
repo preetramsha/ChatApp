@@ -7,16 +7,8 @@ export function initializeSocketIO(server) {
   io = new Server(server, {
     cors: {
       origin: [
-        "https://shinemyresume-frontend.pages.dev",
-        "https://shinemyresume.com",
-        "https://www.shinemyresume.pages.dev",
-        "https://www.shinemyresume.com",
-        "https://www.shinemycv.com",
-        "https://blog-8fi.pages.dev",
-        "https://blogs.shinemyresume.com",
-        "https://shinemycv.com",
+        "https://chatapp.donationflex.com",
         "http://localhost:5173",
-        "http://localhost:4173",
         "http://localhost:3000",
       ],
       methods: ["GET", "POST"],
