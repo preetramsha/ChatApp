@@ -2,13 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Plus, X } from "lucide-react";
+import { getUser, removeUser } from "../lib/auth";
 
 const ChatSessions = () => {
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const MASTER_USER_ID = "ybejd4k4vo76xo6wpcjls864";
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,17 +19,30 @@ const ChatSessions = () => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [title, setTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const user = getUser();
+    if (user) {
+      setUser(user);
+    } else {
+      removeUser();
+      navigate("/login");
+    }
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
+    if (!user) return;
 
     const fetchSessions = async () => {
       try {
         const response = await axios.get(
           "http://localhost:3000/site/chat-sessions",
           {
-            params: { userId: "ybejd4k4vo76xo6wpcjls864" },
-            timeout: 10000,
+            params: { userId: user?.id },
           }
         );
 
@@ -51,7 +64,7 @@ const ChatSessions = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user]);
 
   const handleOpenSession = (sessionId) => {
     navigate(`/chat/${sessionId}`);
@@ -66,9 +79,7 @@ const ChatSessions = () => {
     try {
       const res = await axios.get("http://localhost:3000/site/recent-users");
       if (res?.data?.ok && Array.isArray(res.data.users)) {
-        const filteredUsers = res.data.users.filter(
-          (u) => u.id !== MASTER_USER_ID
-        );
+        const filteredUsers = res.data.users.filter((u) => u.id !== user.id);
         setRecentUsers(filteredUsers);
       } else {
         setRecentUsers([]);
@@ -89,6 +100,7 @@ const ChatSessions = () => {
 
   // Debounced user search
   useEffect(() => {
+    if (!user) return;
     if (!isModalOpen) return;
     if (!searchTerm) {
       setSearchResults([]);
@@ -105,9 +117,7 @@ const ChatSessions = () => {
         });
         if (res?.data?.ok && Array.isArray(res.data.users)) {
           //remove master user from search results
-          const filteredUsers = res.data.users.filter(
-            (u) => u.id !== MASTER_USER_ID
-          );
+          const filteredUsers = res.data.users.filter((u) => u.id !== user.id);
           setSearchResults(filteredUsers);
         } else {
           setSearchResults([]);
@@ -124,7 +134,7 @@ const ChatSessions = () => {
       controller.abort();
       clearTimeout(t);
     };
-  }, [searchTerm, isModalOpen]);
+  }, [searchTerm, isModalOpen, user]);
 
   const resolveUserId = (u) => u?.userId || u?.id || u?._id;
   const resolveUserLabel = (u) => u?.username || u?.name || resolveUserId(u);
@@ -155,7 +165,7 @@ const ChatSessions = () => {
   const canCreateGroup = isGroup && !isCreating;
 
   const allUserIdsForCreate = useMemo(() => {
-    const ids = [MASTER_USER_ID, ...selectedUsers.map((u) => resolveUserId(u))];
+    const ids = [user?.id, ...selectedUsers.map((u) => resolveUserId(u))];
     return Array.from(new Set(ids));
   }, [selectedUsers]);
 
@@ -165,7 +175,7 @@ const ChatSessions = () => {
       const response = await axios.get(
         "http://localhost:3000/site/chat-sessions",
         {
-          params: { userId: MASTER_USER_ID },
+          params: { userId: user?.id },
           timeout: 10000,
         }
       );
@@ -183,16 +193,12 @@ const ChatSessions = () => {
     if (isGroup && !title.trim()) return;
     setIsCreating(true);
     try {
-      const res = await axios.post(
-        "http://localhost:3000/site/chat-session",
-        {
-          masterUserId: MASTER_USER_ID,
-          userIds: allUserIdsForCreate,
-          title: isGroup ? title.trim() : undefined,
-        },
-        { timeout: 15000 }
-      );
-      const sessionId = res?.data?.session?.sessionId;
+      const res = await axios.post("http://localhost:3000/site/chat-session", {
+        masterUserId: user?.id,
+        userIds: allUserIdsForCreate,
+        title: isGroup ? title.trim() : undefined,
+      });
+      const sessionId = res?.data?.session?.id;
       if (sessionId) {
         closeModal();
         await refreshSessions();
@@ -204,6 +210,10 @@ const ChatSessions = () => {
       setIsCreating(false);
     }
   };
+
+  if (loading) {
+    return <div className="min-h-screen text-gray-100">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen text-gray-100">

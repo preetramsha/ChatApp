@@ -1,15 +1,17 @@
+// your main app.js file
+
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { logger } from "hono/logger";
-import { createId } from "@paralleldrive/cuid2";
+import { cors } from "hono/cors";
+import { ulid } from "ulid";
 import authRoutes from "./src/routes/authRoutes.js";
 import siteRoutes from "./src/routes/siteRoutes.js";
-import { cors } from "hono/cors";
+// 1. Import the new websocket initializer
+import { initializeSocketIO } from "./src/routes/wsRoutes.js";
 
 const app = new Hono();
 
-app.use(logger());
-
+// Your CORS middleware remains the same
 app.use(
   "/*",
   cors({
@@ -25,7 +27,7 @@ app.use(
       "http://localhost:5173",
       "http://localhost:4173",
       "http://localhost:3000",
-    ], // Allow specific origin
+    ],
     allowHeaders: [
       "Authorization",
       "Content-Type",
@@ -41,12 +43,16 @@ app.use(
 );
 
 app.get("/", (c) => {
-  return c.text("Hello Hono! " + createId());
+  return c.text("Hello Hono! " + ulid());
 });
 
 app.route("/auth", authRoutes);
 app.route("/site", siteRoutes);
-serve(
+
+// 2. Remove the old ws route: app.route("/ws", wsRoutes);
+
+// 3. Start the server and get the native http.Server instance
+const server = serve(
   {
     fetch: app.fetch,
     port: 3000,
@@ -55,3 +61,6 @@ serve(
     console.log(`Server is running on http://localhost:${info.port}`);
   }
 );
+
+// 4. Attach Socket.IO to the running server
+initializeSocketIO(server);

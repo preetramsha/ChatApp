@@ -31,9 +31,15 @@ export const insertUser = async (name, username, password) => {
   if (existingUser.length > 0) {
     throw new Error("Username already taken");
   }
-  await db
+  const user = await db
     .insert(s.users)
-    .values({ name, username: username.toLowerCase(), password: passwordHash });
+    .values({ name, username: username.toLowerCase(), password: passwordHash })
+    .returning({
+      id: s.users.id,
+      username: s.users.username,
+      name: s.users.name,
+    });
+  return user[0];
 };
 
 export async function validateUser(username, password) {
@@ -196,3 +202,35 @@ export async function getRecentUsers() {
 
   return results;
 }
+
+//get all messages for a session
+export async function getMessagesForSession(sessionId) {
+  if (!sessionId) {
+    throw new Error("Session ID is required");
+  }
+
+  const messages = await db
+    .select({
+      id: s.chat_messages.id,
+      senderUsername: s.users.username, // <-- join column
+      content: s.chat_messages.content,
+      createdAt: s.chat_messages.created_at,
+    })
+    .from(s.chat_messages)
+    .innerJoin(s.users, eq(s.chat_messages.sender_id, s.users.id))
+    .where(eq(s.chat_messages.session_id, sessionId))
+    .orderBy(asc(s.chat_messages.created_at));
+
+  return messages;
+}
+
+export const saveMessage = async (sessionId, senderId, content) => {
+  if (!sessionId || !senderId || !content) {
+    throw new Error("Missing required fields");
+  }
+  await db.insert(s.chat_messages).values({
+    session_id: sessionId,
+    sender_id: senderId,
+    content,
+  });
+};

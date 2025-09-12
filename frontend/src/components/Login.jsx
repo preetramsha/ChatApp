@@ -1,9 +1,71 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { Link, useNavigate } from "react-router-dom";
+import { getUser, removeUser, storeUser } from "../lib/auth";
 
 const Login = () => {
-  const handleLogin = () => {
-    console.log("Login");
+  const navigate = useNavigate();
+  const [data, setData] = useState({
+    username: "",
+    password: "",
+  });
+  const [user, setUser] = useState();
+  const [loading, setLoading] = useState(true);
+
+  const handleLogin = async () => {
+    const resp = await axios.post("http://localhost:3000/auth/login", data);
+    if (resp.data.ok) {
+      toast.success("Login successful");
+      storeUser(resp.data.token);
+      navigate("/chats");
+    } else {
+      toast.error(resp.data.error);
+    }
   };
+
+  useEffect(() => {
+    const user = getUser();
+    if (user) {
+      setUser(user);
+    } else {
+      removeUser();
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogout = () => {
+    removeUser();
+    setUser(null);
+    navigate("/");
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen ">
+        Loading...
+      </div>
+    );
+  }
+
+  if (user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen ">
+        You are logged in as {user.name} <br />
+        <button
+          className="text-blue-500 hover:text-blue-600 mt-2"
+          onClick={handleLogout}
+        >
+          Logout?
+        </button>
+        <div className="text-center text-gray-500 mt-2">
+          <Link to="/chats" className="text-blue-500 hover:text-blue-600">
+            Back to Chats
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen ">
@@ -18,8 +80,10 @@ const Login = () => {
             type="text"
             id="username"
             name="username"
-            placeholder="Enter your username"
+            placeholder="johndoe"
             autoComplete="username"
+            value={data.username}
+            onChange={(e) => setData({ ...data, username: e.target.value })}
           />
         </div>
         <div className="mb-6">
@@ -31,8 +95,10 @@ const Login = () => {
             type="password"
             id="password"
             name="password"
-            placeholder="Enter your password"
+            placeholder="********"
             autoComplete="current-password"
+            value={data.password}
+            onChange={(e) => setData({ ...data, password: e.target.value })}
           />
         </div>
         <button
@@ -41,6 +107,18 @@ const Login = () => {
         >
           Login
         </button>
+        <div className="text-center text-gray-500 mt-4">
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-blue-500">
+            Sign up
+          </Link>
+        </div>
+        <div
+          className="text-center text-gray-500 mt-4 cursor-pointer text-blue-500"
+          onClick={handleLogout}
+        >
+          Logout
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { Link, useNavigate } from "react-router-dom";
+import { storeUser } from "../lib/auth";
 
 const Signup = () => {
-  const handleSignup = () => {
-    console.log("Signup");
+  const navigate = useNavigate();
+  const [data, setData] = useState({
+    name: "",
+    username: "",
+    password: "",
+  });
+  const handleSignup = async () => {
+    const resp = await axios.post("http://localhost:3000/auth/signup", data);
+    if (resp.data.ok) {
+      toast.success("Signup successful");
+      storeUser(resp.data.token);
+      navigate("/chats");
+    } else {
+      toast.error(resp.data.error);
+    }
   };
 
   return (
@@ -17,8 +34,10 @@ const Signup = () => {
             className="w-full px-3 py-2 placeholder:text-gray-400 border rounded focus:outline-none focus:ring focus:border-blue-300"
             type="text"
             id="name"
+            value={data.name}
+            onChange={(e) => setData({ ...data, name: e.target.value })}
             name="name"
-            placeholder="Enter your name"
+            placeholder="John Doe"
             autoComplete="off"
           />
         </div>
@@ -30,8 +49,10 @@ const Signup = () => {
             className="w-full px-3 py-2 border placeholder:text-gray-400 rounded focus:outline-none focus:ring focus:border-blue-300"
             type="text"
             id="username"
+            value={data.username}
+            onChange={(e) => setData({ ...data, username: e.target.value })}
             name="username"
-            placeholder="Enter your username"
+            placeholder="johndoe"
             autoComplete="username"
           />
         </div>
@@ -43,8 +64,10 @@ const Signup = () => {
             className="w-full px-3 py-2 border placeholder:text-gray-400 rounded focus:outline-none focus:ring focus:border-blue-300"
             type="password"
             id="password"
+            value={data.password}
+            onChange={(e) => setData({ ...data, password: e.target.value })}
             name="password"
-            placeholder="Enter your password"
+            placeholder="********"
             autoComplete="current-password"
           />
         </div>
@@ -54,6 +77,12 @@ const Signup = () => {
         >
           Signup
         </button>
+        <div className="text-center text-gray-500 mt-4">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-500">
+            Login
+          </Link>
+        </div>
       </div>
     </div>
   );

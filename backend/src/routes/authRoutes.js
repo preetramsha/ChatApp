@@ -7,10 +7,20 @@ const auth = new Hono();
 auth.post("/signup", async (c) => {
   try {
     const { name, username, password } = await c.req.json();
-    await dbc.insertUser(name, username, password);
-    return c.json({ ok: true, message: "User created successfully" });
+    if (!name || !username || !password) {
+      return c.json({ ok: false, error: "Missing required fields" }, 400);
+    }
+
+    const user = await dbc.insertUser(name, username, password);
+    const token = await jwt.sign(user, process.env.jwtsecret);
+    return c.json({
+      ok: true,
+      message: "User created successfully",
+      user,
+      token,
+    });
   } catch (error) {
-    return c.json({ ok: false, error: error.message }, 500);
+    return c.json({ ok: false, error: error.message }, 200);
   }
 });
 
@@ -27,7 +37,7 @@ auth.post("/login", async (c) => {
     }
     return c.json({ ok: true, token });
   } catch (error) {
-    return c.json({ ok: false, error: error.message }, 500);
+    return c.json({ ok: false, error: error.message }, 200);
   }
 });
 

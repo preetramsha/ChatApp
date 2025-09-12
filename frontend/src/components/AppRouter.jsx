@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 import Landing from "./Landing";
 import Login from "./Login";
 import TestWS from "./TestWS";
@@ -18,6 +19,7 @@ const AppRouter = () => {
         <Route path="/chats" element={<ChatSessions />} />
         <Route path="/chat/:id" element={<Chat />} />
       </Routes>
+      <ToastContainer closeOnClick={true} />
     </BrowserRouter>
   );
 };

@@ -1,6 +1,12 @@
 import { sql } from "drizzle-orm";
-import { text, sqliteTable, index, primaryKey } from "drizzle-orm/sqlite-core";
-import { createId } from "@paralleldrive/cuid2";
+import {
+  text,
+  sqliteTable,
+  index,
+  primaryKey,
+  integer,
+} from "drizzle-orm/sqlite-core";
+import { ulid } from "ulid";
 
 // --- USERS ---
 export const users = sqliteTable(
@@ -8,34 +14,27 @@ export const users = sqliteTable(
   {
     id: text("id")
       .primaryKey()
-      .$defaultFn(() => createId()), // Cuid2 ID
+      .$defaultFn(() => ulid()), // Cuid2 ID
     name: text("name").notNull(),
     username: text("username").notNull().unique(),
     password: text("password").notNull(),
-    created_at: text("created_at")
+    created_at: integer("created_at")
       .notNull()
-      .default(sql`(current_timestamp)`),
+      .default(sql`(strftime('%s','now'))`),
   },
-  (user) => [
-    index("users_username_idx").on(user.username),
-    index("users_id_idx").on(user.id),
-  ]
+  (user) => [index("users_username_idx").on(user.username)]
 );
 
 // --- CHAT SESSIONS ---
-export const chat_sessions = sqliteTable(
-  "chat_sessions",
-  {
-    id: text("id")
-      .primaryKey()
-      .$defaultFn(() => createId()), // Cuid2 ID
-    title: text("title"), // can be null for private 1-1
-    created_at: text("created_at")
-      .notNull()
-      .default(sql`(current_timestamp)`),
-  },
-  (session) => [index("chat_sessions_id_idx").on(session.id)]
-);
+export const chat_sessions = sqliteTable("chat_sessions", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => ulid()), // Cuid2 ID
+  title: text("title"), // can be null for private 1-1
+  created_at: integer("created_at")
+    .notNull()
+    .default(sql`(strftime('%s','now'))`),
+});
 
 // --- CHAT PARTICIPANTS (session <-> users) ---
 export const chat_participants = sqliteTable(
@@ -47,9 +46,9 @@ export const chat_participants = sqliteTable(
     user_id: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    joined_at: text("joined_at")
+    joined_at: integer("joined_at")
       .notNull()
-      .default(sql`(current_timestamp)`),
+      .default(sql`(strftime('%s','now'))`),
   },
   (cp) => [
     primaryKey({ columns: [cp.session_id, cp.user_id] }),
@@ -64,7 +63,7 @@ export const chat_messages = sqliteTable(
   {
     id: text("id")
       .primaryKey()
-      .$defaultFn(() => createId()), // Cuid2 ID
+      .$defaultFn(() => ulid()), // Cuid2 ID
     session_id: text("session_id")
       .notNull()
       .references(() => chat_sessions.id, { onDelete: "cascade" }),
@@ -72,12 +71,16 @@ export const chat_messages = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     content: text("content").notNull(),
-    created_at: text("created_at")
+    created_at: integer("created_at")
       .notNull()
-      .default(sql`(current_timestamp)`),
+      .default(sql`(strftime('%s','now'))`),
   },
   (msg) => [
     index("chat_messages_session_idx").on(msg.session_id),
     index("chat_messages_sender_idx").on(msg.sender_id),
+    index("chat_messages_session_created_idx").on(
+      msg.session_id,
+      msg.created_at
+    ),
   ]
 );
