@@ -4,7 +4,9 @@ const site = new Hono();
 
 // --- API route ---
 site.post("/chat-session", async (c) => {
-  const { masterUserId, userIds, title } = await c.req.json();
+  let { masterUserId, userIds, title } = await c.req.json();
+  masterUserId = masterUserId.trim();
+  title = title.trim();
 
   if (!Array.isArray(userIds) || userIds.length < 2) {
     return c.json({ ok: false, error: "At least 2 users required" }, 400);
@@ -33,7 +35,10 @@ site.post("/chat-session", async (c) => {
 });
 
 site.get("/search-users", async (c) => {
-  const searchTerm = c.req.query("searchTerm");
+  const searchTerm = c.req.query("searchTerm").trim();
+  if (!searchTerm) {
+    return c.json({ ok: false, error: "Search term cannot be empty" }, 400);
+  }
   try {
     const users = await dbc.searchUsers(searchTerm);
     return c.json({ ok: true, users });
@@ -53,7 +58,7 @@ site.get("/recent-users", async (c) => {
 
 // --- API route ---
 site.get("/chat-sessions", async (c) => {
-  const userId = c.req.query("userId");
+  const userId = c.req.query("userId").trim();
   try {
     console.log("userId", userId);
     const sessions = await dbc.getChatSessions(userId);
@@ -65,7 +70,7 @@ site.get("/chat-sessions", async (c) => {
 
 //get all messages for a session
 site.get("/messages", async (c) => {
-  const sessionId = c.req.query("sessionId");
+  const sessionId = c.req.query("sessionId").trim();
   try {
     const messages = await dbc.getMessagesForSession(sessionId);
     return c.json({ ok: true, messages });

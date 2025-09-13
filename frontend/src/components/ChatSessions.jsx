@@ -42,6 +42,7 @@ const ChatSessions = () => {
         const response = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/site/chat-sessions`,
           {
+            validateStatus: () => true,
             params: { userId: user?.id },
           }
         );
@@ -78,7 +79,10 @@ const ChatSessions = () => {
     setTitle("");
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/site/recent-users`
+        `${import.meta.env.VITE_BACKEND_URL}/site/recent-users`,
+        {
+          validateStatus: () => true,
+        }
       );
       if (res?.data?.ok && Array.isArray(res.data.users)) {
         const filteredUsers = res.data.users.filter((u) => u.id !== user.id);
@@ -115,6 +119,7 @@ const ChatSessions = () => {
         const res = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/site/search-users`,
           {
+            validateStatus: () => true,
             params: { searchTerm },
             timeout: 10000,
             signal: controller.signal,
@@ -181,6 +186,7 @@ const ChatSessions = () => {
         `${import.meta.env.VITE_BACKEND_URL}/site/chat-sessions`,
         {
           params: { userId: user?.id },
+          validateStatus: () => true,
           timeout: 10000,
         }
       );
@@ -204,6 +210,9 @@ const ChatSessions = () => {
           masterUserId: user?.id,
           userIds: allUserIdsForCreate,
           title: isGroup ? title.trim() : undefined,
+        },
+        {
+          validateStatus: () => true,
         }
       );
       const sessionId = res?.data?.session?.id;

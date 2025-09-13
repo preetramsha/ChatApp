@@ -12,9 +12,16 @@ const Signup = () => {
     password: "",
   });
   const handleSignup = async () => {
+    if (!data.name || !data.username || !data.password) {
+      toast.error("Please enter a name, username and password");
+      return;
+    }
     const resp = await axios.post(
       `${import.meta.env.VITE_BACKEND_URL}/auth/signup`,
-      data
+      data,
+      {
+        validateStatus: () => true,
+      }
     );
     if (resp.data.ok) {
       toast.success("Signup successful");
@@ -76,6 +83,11 @@ const Signup = () => {
         </div>
         <button
           onClick={handleSignup}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSignup();
+            }
+          }}
           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
         >
           Signup

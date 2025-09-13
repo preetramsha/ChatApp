@@ -20,7 +20,7 @@ auth.post("/signup", async (c) => {
       token,
     });
   } catch (error) {
-    return c.json({ ok: false, error: error.message }, 200);
+    return c.json({ ok: false, error: error.message }, 500);
   }
 });
 
@@ -37,7 +37,7 @@ auth.post("/login", async (c) => {
     }
     return c.json({ ok: true, token });
   } catch (error) {
-    return c.json({ ok: false, error: error.message }, 200);
+    return c.json({ ok: false, error: error.message }, 500);
   }
 });
 

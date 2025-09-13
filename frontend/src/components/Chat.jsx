@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { io as socketIOClient } from "socket.io-client";
-import { getUser, removeUser } from "../lib/auth";
+import { getToken, getUser, removeUser } from "../lib/auth";
+import { toast } from "react-toastify";
 
 const SOCKET_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -42,6 +43,7 @@ const Chat = () => {
       try {
         const res = await axios.get(`${SOCKET_URL}/site/messages`, {
           params: { sessionId },
+          validateStatus: () => true,
           timeout: 10000,
         });
         if (!isMounted) return;
@@ -72,6 +74,7 @@ const Chat = () => {
       try {
         const res = await axios.get(`${SOCKET_URL}/site/chat-sessions`, {
           params: { userId: user.id },
+          validateStatus: () => true,
           timeout: 10000,
         });
         if (!isMounted) return;
@@ -130,6 +133,7 @@ const Chat = () => {
       // non-fatal; show ephemeral error
       // Optionally could toast; for now, set error briefly
       setError(String(msg || "Socket error"));
+      toast.error(String(msg || "Socket error"));
       setTimeout(() => setError(null), 3000);
     };
 
@@ -169,6 +173,8 @@ const Chat = () => {
         chatSessionId: sessionId,
         userId: user.id,
         message: text,
+        senderUsername: user.username,
+        token: getToken(),
       });
       setInput("");
     } catch (e) {
@@ -235,12 +241,12 @@ const Chat = () => {
                   <div
                     className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm border ${
                       isMine
-                        ? "bg-zinc-200 text-zinc-900 border-zinc-300"
+                        ? " text-white border-zinc-300"
                         : "bg-zinc-900 text-zinc-100 border-zinc-800"
                     }`}
                   >
                     {!isMine && m.username && (
-                      <div className="text-xs text-zinc-400 mb-0.5">
+                      <div className="text-xs text-zinc-500 mb-0.5">
                         {m.username}
                       </div>
                     )}
@@ -256,7 +262,7 @@ const Chat = () => {
         </div>
       </main>
 
-      <footer className="border-t border-zinc-800 bg-zinc-950 p-3">
+      <footer className="border-t fixed bottom-0 left-0 right-0 border-zinc-800 bg-zinc-950 p-3">
         <div className="max-w-3xl mx-auto flex items-end gap-2">
           <textarea
             value={input}
@@ -264,16 +270,18 @@ const Chat = () => {
             onKeyDown={handleKeyDown}
             placeholder="Type a message"
             rows={1}
-            className="flex-1 resize-none rounded-md bg-zinc-900 border border-zinc-800 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+            className="flex-1 resize-none rounded-md bg-zinc-900 border border-zinc-800 px-3 py-[10px] text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-700 h-[42px] min-h-[42px] max-h-[120px]"
+            style={{ lineHeight: "1.5" }}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isSending}
-            className={`rounded-md px-3 py-2 text-sm min-w-20 ${
+            className={`rounded-md px-3 py-[10px] text-sm min-w-20 h-[42px] ${
               input.trim() && !isSending
                 ? "bg-white text-black hover:opacity-90"
                 : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
             }`}
+            style={{ lineHeight: "1.5" }}
           >
             {isSending ? "Sending..." : "Send"}
           </button>
