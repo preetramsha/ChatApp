@@ -4,9 +4,11 @@ const site = new Hono();
 
 // --- API route ---
 site.post("/chat-session", async (c) => {
-  let { masterUserId, userIds, title } = await c.req.json();
+  let { masterUserId, userIds, title = "" } = await c.req.json();
   masterUserId = masterUserId.trim();
-  title = title.trim();
+  if (userIds.length > 2) {
+    title = title.trim();
+  }
 
   if (!Array.isArray(userIds) || userIds.length < 2) {
     return c.json({ ok: false, error: "At least 2 users required" }, 400);

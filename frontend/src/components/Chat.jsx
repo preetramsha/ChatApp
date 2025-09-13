@@ -228,7 +228,7 @@ const Chat = () => {
             <div className="text-zinc-500">No messages yet. Say hello!</div>
           )}
 
-          <ul className="space-y-3">
+          <ul className="space-y-3 pb-[80px] sm:pb-[80px] mb-0">
             {normalizedMessages.map((m) => {
               const isMine = m.username
                 ? String(m.username) === String(user.username)

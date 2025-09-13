@@ -6,10 +6,12 @@ const auth = new Hono();
 
 auth.post("/signup", async (c) => {
   try {
-    const { name, username, password } = await c.req.json();
+    let { name, username, password } = await c.req.json();
     if (!name || !username || !password) {
       return c.json({ ok: false, error: "Missing required fields" }, 400);
     }
+    //remove all spaces from username
+    username = username.replace(/\s/g, "");
 
     const user = await dbc.insertUser(name, username, password);
     const token = await jwt.sign(user, process.env.jwtsecret);
